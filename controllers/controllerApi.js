@@ -35,7 +35,7 @@ const registerApiController = async (req, res) => {
       message: "API registered successfully",
       data: newApi,
     });
-    
+
   } catch (error) {
     console.error("Register API Error:", error);
 
