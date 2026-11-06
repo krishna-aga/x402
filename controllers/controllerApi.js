@@ -1,21 +1,26 @@
+
 const crypto = require("crypto");
 const db = require("../models/db");
 const ApiStats = require("../models/apiStats");
 
-async function registerApiController(req, res) {
+const registerApiController = async (req, res) => {
   try {
     const { name, payTo, amount, endpoint } = req.body;
 
-    const apiId = crypto.randomUUID();
-
+    // Check if an API with the same endpoint already exists
     const existingApi = await db.Api.findOne({ endpoint });
+
     if (existingApi) {
       return res.status(400).json({
         error: "API with this endpoint already exists",
       });
     }
 
-    const newApi = new db.Api({
+    // Generate a unique API ID
+    const apiId = crypto.randomUUID();
+
+    // Create and save the API
+    const newApi = await db.Api.create({
       apiId,
       name,
       payTo,
@@ -23,23 +28,22 @@ async function registerApiController(req, res) {
       endpoint,
     });
 
-    const savedApi = await newApi.save();
-    await ApiStats.create({
-        apiId: newApi.apiId,
-      });
+    // Initialize API usage statistics
+    await ApiStats.create({ apiId });
 
     return res.status(201).json({
-      message: "✅ API registered successfully",
-      data: savedApi,
+      message: "API registered successfully",
+      data: newApi,
     });
+    
   } catch (error) {
     console.error("Register API Error:", error);
 
     return res.status(500).json({
-      error: "Internal server error",
+      error: "Something went wrong",
     });
   }
-}
+};
 
 module.exports = {
   registerApiController,
